@@ -1,0 +1,69 @@
+{
+	"fiveNTZ":
+	{"host":"172.31.7.242",
+	  "port":"5480",
+	  "serverName":"",
+	  "dbName":"DWM",
+	  "user":"maxi",
+	  "pwd":"1234",
+	  "conector":"NTZ" ,
+	  "query": "SELECT top 1 * from table",
+	  "rollback": "SELECT 1 as rollb from table"}
+		,
+		"oneSYB":
+		{"host":"182.12.47.150",
+		  "port":"4545",
+		  "serverName":"CONSOLIDADA_DES",
+		  "dbName":"CONSOLIDADA",
+		  "user":"maxi",
+		  "pwd":"1234",
+		  "conector":"SYB" ,
+		  "query": "SELECT top 1 * from table",
+		  "rollback": "SELECT 1 as rollb from table"}
+			,
+			"twoSYB":
+			{"host":"182.12.47.150",
+			  "port":"4545",
+			  "serverName":"CONSOLIDADA_DES",
+			  "dbName":"CONSOLIDADA",
+			  "user":"maxi",
+			  "pwd":"1234",
+			  "conector":"SYB" ,
+			  "query": "SELECT top 1 * from table",
+			  "rollback": "SELECT 1 as rollb from table"}
+				,
+				"sixNTZ":
+				{"host":"172.31.7.242",
+				  "port":"5480",
+				  "serverName":"",
+				  "dbName":"DWM",
+				  "user":"maxi",
+				  "pwd":"1234",
+				  "conector":"NTZ" ,
+				  "query": "SELECT top 1 * from table",
+				  "rollback": "SELECT 1 as rollb from table"}
+					,
+					"threeMSSQL":
+				  {"host":"srvdbslis9-test",
+				    "port":"7427",
+				    "serverName":"",
+				    "dbName":"DWM",
+				    "user":"",
+				    "pwd":"",
+				    "conector":"MSSQL",
+				    "query": "SELECT top 1 * from table",
+				    "rollback": "SELECT 1 as rollb from table"
+				  }
+					,
+					"fourMSSQL":
+				  {"host":"srvdbslis9-test",
+				    "port":"7427",
+				    "serverName":"",
+				    "dbName":"DWM",
+				    "user":"",
+				    "pwd":"",
+				    "conector":"MSSQL",
+				    "query": "SELECT top 1 * from table",
+				    "rollback": "SELECT 1 as rollb from table"
+				  }
+}

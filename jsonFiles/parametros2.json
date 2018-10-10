@@ -1,0 +1,17 @@
+{
+		"one":[
+					{"host":"182.12.47.150",
+						"port":"4545",
+						"serverName":"CONSOLIDADA_DES",
+						"dbName":"CONSOLIDADA",
+						"conector":"SYB" },
+					{"query":"SELECT 1 * from table"}
+			],
+		"two":[
+				{"host":"srvdbslis9-test",
+					"port":"7427",
+					"dbName":"DWM",
+					"conector":"MSSQL"},
+				{"query":"SELECT 2 * from table"}
+				]
+}
