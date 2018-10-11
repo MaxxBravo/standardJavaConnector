@@ -25,12 +25,12 @@ public class DBConnector implements Callable<Void>{
 	Statement st = null;
 	
 	static boolean allGood = true;
-	public String conector, query, rollback;
+	public String conector, query;
 	public String idConnector, user, pwd, host, port, serverName, dbName;
 	
 	//Constructor General
 	public DBConnector(String idConnector, String host, String port, String serverName, String dbName, String user, String pwd,
-			String conector, String query, String rollback) {
+			String conector, String query) {
 		this.idConnector = idConnector;
 		this.host = host;
 		this.port = port;
@@ -42,7 +42,11 @@ public class DBConnector implements Callable<Void>{
 		this.conector = conector;
 		
 		this.query = query;
-		this.rollback = rollback;
+	}
+
+
+	public static boolean isAllGood() {
+		return allGood;
 	}
 
 
@@ -91,7 +95,6 @@ public class DBConnector implements Callable<Void>{
 			state.addProperty("execution", "error");
 			state.addProperty("error_message", e.getLocalizedMessage());
 		}
-		
 	}
 	
 	public JsonObject makeRequest2() {
