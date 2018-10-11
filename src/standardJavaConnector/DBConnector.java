@@ -24,9 +24,12 @@ public class DBConnector implements Callable<Void>{
 	Connection conn = null;
 	Statement st = null;
 	
-	static boolean allGood = true;
+	private static boolean allGood = true;
+	private static boolean debugModeCon = false;
+	
 	public String conector, query;
 	public String idConnector, user, pwd, host, port, serverName, dbName;
+	public int rowsAffected;
 	
 	//Constructor General
 	public DBConnector(String idConnector, String host, String port, String serverName, String dbName, String user, String pwd,
@@ -48,12 +51,17 @@ public class DBConnector implements Callable<Void>{
 	public static boolean isAllGood() {
 		return allGood;
 	}
-
+	
+	public static void setDebugModeCon(boolean debugModeCon) {
+		DBConnector.debugModeCon = debugModeCon;
+	}
 
 	public void makeRequest() throws IOException, SQLException{
 			
 		try {
-			System.out.println(new Date().toString()+ " Starting connector \"" + this.idConnector + "\" assignment.");
+			if(debugModeCon) {
+				System.out.println(new Date().toString()+ " Starting connector \"" + this.idConnector + "\" assignment.");
+			}
 			String url = "";
 			
 			if (this.conector.equals("NTZ")) {
@@ -85,7 +93,7 @@ public class DBConnector implements Callable<Void>{
 			conn.setAutoCommit(false);
 			st = conn.createStatement();
 			
-			st.executeUpdate(sql);
+			rowsAffected = st.executeUpdate(sql);
 			state.addProperty("idConnector", this.idConnector);
 			state.addProperty("execution", "ok");
 
@@ -115,6 +123,7 @@ public class DBConnector implements Callable<Void>{
 				conn.commit();
 				conn.close();
 			}
+			state.addProperty("afected_rows", rowsAffected);
 			state.addProperty("resolution", "commited");
 		} else {
 			if (st != null) {
@@ -126,7 +135,9 @@ public class DBConnector implements Callable<Void>{
 			}
 			state.addProperty("resolution", "rollbacked");
 		}
-		System.out.println(new Date().toString() + " Run last part of \"" + this.idConnector + "\".");
+		if(debugModeCon) {
+			System.out.println(new Date().toString() + " Run last part of \"" + this.idConnector + "\".");
+		}
 		return this.state;
 	}
 

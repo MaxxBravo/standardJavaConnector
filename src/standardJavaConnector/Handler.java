@@ -23,7 +23,10 @@ public class Handler {
 
 	public static List<DBConnector> otherConectores = new ArrayList<>();
 	public static List<DBConnector> mssqlconectores = new ArrayList<>();
+	static JsonObject responseObject = new JsonObject(); 
 	static JsonObject logAudParams = new JsonObject();
+	static boolean debugMode = false;
+	
 	public static void establishConnectors(String json_path) throws JsonIOException, JsonSyntaxException, FileNotFoundException {
 		JsonParser parser = new JsonParser();
 
@@ -52,42 +55,52 @@ public class Handler {
 			}
 		}
 	}
+
 	
 	public static <T> void main(String[] args) throws IOException {
-		// Read Json File and establishes Lists of DBConnectors for Execution
+		// Read Json file and establishes Lists of DBConnectors for Execution
 		establishConnectors(args[0]);
+		// Set debugMode
+		String arg1 = "";
+		try {
+			arg1 = args[1];
+		} catch (ArrayIndexOutOfBoundsException e) {
+			arg1 = "false";
+		}
+		debugMode = Boolean.parseBoolean(arg1);
+		DBConnector.setDebugModeCon(debugMode);
+		
 		
 		ExecutorService executeOthers = Executors.newFixedThreadPool(otherConectores.size());
 		ExecutorService executeMSSQL = Executors.newCachedThreadPool();
 		if (!mssqlconectores.isEmpty()) {
 			executeMSSQL = Executors.newFixedThreadPool(mssqlconectores.size());
 		}
-//		List <String> outs = new ArrayList<>();
-//		boolean needRollback = false;
+
 		try {
-//			List<Future<Void>> afterexec = executeOthers.invokeAll(otherConectores);
-//			List<Future<Void>> afterexecMSSQL = new ArrayList<>();
-			
 			executeOthers.invokeAll(otherConectores);
 			
 			if (!mssqlconectores.isEmpty()) {
-//				afterexecMSSQL = executeMSSQL.invokeAll(mssqlconectores);
 				executeMSSQL.invokeAll(mssqlconectores);
 			}
-			
-//			execute.awaitTermination(1, TimeUnit.MINUTES);
 			executeOthers.shutdown();
 			executeMSSQL.shutdown();
 			
 			for (DBConnector dbConn : otherConectores) {
 				JsonObject state = dbConn.closeConnections();
-				System.out.println(new Date().toString() + " " + state.get("idConnector") + ": "
+				responseObject.add(state.get("idConnector").getAsString(), state);
+				if(debugMode) {
+					System.out.println(new Date().toString() + " " + state.get("idConnector") + ": "
 					+ state.get("execution") + "_" + state.get("resolution") + " - " + state.get("error_message"));
+				}
 			}
 			for (DBConnector dbConn : mssqlconectores) {
 				JsonObject state = dbConn.closeConnections();
-				System.out.println(new Date().toString() + " " + state.get("idConnector") + ": "
+				responseObject.add(state.get("idConnector").getAsString(), state);
+				if(debugMode) {
+					System.out.println(new Date().toString() + " " + state.get("idConnector") + ": "
 					+ state.get("execution") + "_" + state.get("resolution") + " - " + state.get("error_message"));
+				}
 			}
 			
 			if(!DBConnector.isAllGood()) {
@@ -99,9 +112,15 @@ public class Handler {
 						logAudParams.get("query").getAsString());
 				logConnector.makeRequest();
 				JsonObject state = logConnector.closeConnections();
-				System.out.println(new Date().toString() + " " + state.get("idConnector") + ": "
+				responseObject.add(state.get("idConnector").getAsString(), state);
+				if(debugMode) {
+					System.out.println(new Date().toString() + " " + state.get("idConnector") + ": "
 					+ state.get("execution") + "_" + state.get("resolution") + " - " + state.get("error_message"));
+				}
 			}
+			if(!debugMode) {
+				System.out.println(responseObject.toString());
+			}			
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} catch (SQLException e) {
