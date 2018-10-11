@@ -3,8 +3,10 @@ package standardJavaConnector;
  * 
  * */
 
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -12,8 +14,10 @@ import java.util.Map.Entry;
 import java.util.concurrent.*;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonIOException;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 
 public class Handler {
 
@@ -31,10 +35,8 @@ public class Handler {
 			}
 		}
 	}
-
-	public static <T> void main(String[] args) throws IOException {
-		String json_path = args[0];
-
+	
+	public static void establishConnectors(String json_path) throws JsonIOException, JsonSyntaxException, FileNotFoundException {
 		JsonParser parser = new JsonParser();
 
 		JsonObject elem = parser.parse(new FileReader(json_path)).getAsJsonObject();
@@ -60,8 +62,13 @@ public class Handler {
 
 //			break;
 		}
-//		System.out.println(conectores.get(1).host);
-		ExecutorService execute = Executors.newFixedThreadPool(otherConectores.size());
+	}
+	
+	public static <T> void main(String[] args) throws IOException {
+		// Read Json File and establishes Lists of DBConnectors for Execution
+		establishConnectors(args[0]);
+		
+		ExecutorService executeOthers = Executors.newFixedThreadPool(otherConectores.size());
 		ExecutorService executeMSSQL = Executors.newCachedThreadPool();
 		if (!mssqlconectores.isEmpty()) {
 			executeMSSQL = Executors.newFixedThreadPool(mssqlconectores.size());
@@ -69,29 +76,45 @@ public class Handler {
 //		List <String> outs = new ArrayList<>();
 //		boolean needRollback = false;
 		try {
-			List<Future<JsonObject>> afterexec = execute.invokeAll(otherConectores);
-			List<Future<JsonObject>> afterexecMSSQL = new ArrayList<>();
+//			List<Future<Void>> afterexec = executeOthers.invokeAll(otherConectores);
+//			List<Future<Void>> afterexecMSSQL = new ArrayList<>();
+			
+			executeOthers.invokeAll(otherConectores);
+			
 			if (!mssqlconectores.isEmpty()) {
-				afterexecMSSQL = executeMSSQL.invokeAll(mssqlconectores);
+//				afterexecMSSQL = executeMSSQL.invokeAll(mssqlconectores);
+				executeMSSQL.invokeAll(mssqlconectores);
 			}
 			
 //			execute.awaitTermination(1, TimeUnit.MINUTES);
-			execute.shutdown();
+			executeOthers.shutdown();
 			executeMSSQL.shutdown();
-			for (Future<JsonObject> fut : afterexec) {
-				System.out.println(new Date().toString() + " " + fut.get().get("idConnector") + ": "
-						+ fut.get().get("execution") + " - " + fut.get().get("error_message"));
+			
+			for (DBConnector dbConn : otherConectores) {
+				JsonObject state = dbConn.closeConnections();
+				System.out.println(new Date().toString() + " " + state.get("idConnector") + ": "
+					+ state.get("execution") + "_" + state.get("resolution") + " - " + state.get("error_message"));
 			}
+			for (DBConnector dbConn : mssqlconectores) {
+				JsonObject state = dbConn.closeConnections();
+				System.out.println(new Date().toString() + " " + state.get("idConnector") + ": "
+					+ state.get("execution") + "_" + state.get("resolution") + " - " + state.get("error_message"));
+			}
+			
+//			for (Future<Void> fut : afterexec) {
+//				System.out.println(new Date().toString() + " " + fut.get().get("idConnector") + ": "
+//						+ fut.get().get("execution") + " - " + fut.get().get("error_message"));
+//			}
 
 //			executeMSSQL.awaitTermination(1, TimeUnit.MINUTES);
 
-			if (!mssqlconectores.isEmpty()) {
-				executeMSSQL.shutdown();
-				for (Future<JsonObject> fut : afterexecMSSQL) {
-					System.out.println(new Date().toString() + " " + fut.get().get("idConnector") + ": "
-							+ fut.get().get("execution") + " - " + fut.get().get("error_message"));
-				}
-			}
+//			if (!mssqlconectores.isEmpty()) {
+//				executeMSSQL.shutdown();
+//				for (Future<JsonObject> fut : afterexecMSSQL) {
+//					System.out.println(new Date().toString() + " " + fut.get().get("idConnector") + ": "
+//							+ fut.get().get("execution") + " - " + fut.get().get("error_message"));
+//				}
+//			}
 //				if(fut.get().get("execution").getAsString().equals("error")) {
 //				outs.add(fut.get().get("idConnector").getAsString());
 //				needRollback = true;
@@ -113,7 +136,8 @@ public class Handler {
 //			} 
 		} catch (InterruptedException e) {
 			e.printStackTrace();
-		} catch (ExecutionException e) {
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 

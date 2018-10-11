@@ -6,12 +6,12 @@
 	<classpathentry kind="lib" path="C:/Users/Maxi Bravo/Downloads/javajar/analytics/libs/gson-2.1.jar" sourcepath="C:/Users/Maxi Bravo/Downloads/javajar/analytics/libs-sources/gson-2.1-sources.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Maxi Bravo/Downloads/Microsoft JDBC Driver 6.4 for SQL Server/sqljdbc_6.4/enu/mssql-jdbc-6.4.0.jre7.jar">
 		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="C:/Users/Maxi Bravo/Desktop/dlls"/>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="standardJavaConnector/dlls"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="C:/Users/Maxi Bravo/Desktop/sajdbc4.jar">
 		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="C:/Users/Maxi Bravo/Desktop/dlls"/>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="standardJavaConnector/dlls"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="output" path="bin"/>

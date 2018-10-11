@@ -70,6 +70,7 @@ public class DBConnector implements Callable<Void>{
 						+ "ServerName="+this.serverName+";"
 						+ "DBN="+this.dbName+";"
 						+ "KRB=SSPI";
+				Class.forName("sybase.jdbc4.sqlanywhere.IDriver");
 				conn = DriverManager.getConnection(url);
 				
 			} else {
@@ -103,30 +104,31 @@ public class DBConnector implements Callable<Void>{
 	}
 	
 	public JsonObject closeConnections() throws SQLException {
-			if(allGood) {
-				if (st != null) {
-					st.close();
-				}
-				if (conn != null) {
-					conn.commit();
-					conn.close();
-				}
-			} else {
-				if (st != null) {
-					st.close();
-				}
-				if (conn != null) {
-					conn.rollback();
-					conn.close();
-				}
+		if (allGood) {
+			if (st != null) {
+				st.close();
 			}
-		System.out.println(new Date().toString()+ " Run last part of \"" + this.idConnector + "\".");
-		return state;
+			if (conn != null) {
+				conn.commit();
+				conn.close();
+			}
+			state.addProperty("resolution", "commited");
+		} else {
+			if (st != null) {
+				st.close();
+			}
+			if (conn != null) {
+				conn.rollback();
+				conn.close();
+			}
+			state.addProperty("resolution", "rollbacked");
+		}
+		System.out.println(new Date().toString() + " Run last part of \"" + this.idConnector + "\".");
+		return this.state;
 	}
-	
+
 	@Override
 	public Void call() throws Exception {
-		//return this.host + ":" + this.port;
 		this.makeRequest();
 		return null;
 	}
