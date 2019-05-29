@@ -115,12 +115,15 @@ public class DBConnector implements Callable<Void>{
 			}
 			
 			int [] arr_int = st.executeBatch();
-			//JsonArray result_description = new JsonArray().a;
+			JsonArray result_description = (JsonArray) arr_int;
+			JsonObject resl = new JsonObject();
+			
+			JsonElement res = new JsonElement() {
+				return arr_int;
+			};
+			
 			for (int i : arr_int) {
 				rowsAffected += i;
-				//JsonElement val;
-				
-				//result_description.;
 			}
 			
 			
