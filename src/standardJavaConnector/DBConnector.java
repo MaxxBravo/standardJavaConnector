@@ -92,29 +92,44 @@ public class DBConnector implements Callable<Void>{
 				throw new WrongDatabaseException();
 			}
 			
-			// String[] sql = this.query;
 			conn.setAutoCommit(false);
 			st = conn.createStatement();
-			JsonArray arr = this.query;
-			for(JsonElement i : arr) {
+			JsonArray queries = this.query;
+			JsonObject result = new JsonObject();
+			
+			JsonArray description = new JsonArray();
+			for(JsonElement elem : queries) {
+				JsonObject query_object = elem.getAsJsonObject();
+				query_object.get("script").getAsString();
 				
-				st.addBatch(i.getAsString());
+				if(query_object.get("type").getAsString().equalsIgnoreCase("UPDATE")) {
+					JsonObject keys_object = query_object.get("keys").getAsJsonObject();
+					
+					description.add(keys_object);
+				}
+				
+				
+				
+				
+				st.addBatch(elem.getAsString());
 			}
 			
-			//st.addBatch(sql);
-			// st.executeUpdate(sql);
-			
-			//rowsAffected = st.executeUpdate(sql);
 			int [] arr_int = st.executeBatch();
-			
+			//JsonArray result_description = new JsonArray().a;
 			for (int i : arr_int) {
 				rowsAffected += i;
+				//JsonElement val;
+				
+				//result_description.;
 			}
 			
+			
+			result_description.
 			state.addProperty("idConnector", this.idConnector);
 			state.addProperty("execution", "ok");
 			state.addProperty("conector", this.conector);
-
+			state.add("result", new JsonObject());
+			state.get("result").getAsJsonObject().add("description", arr_int);
 		} catch (Exception e) {
 			allGood = false;
 			state.addProperty("idConnector", this.idConnector);
@@ -133,7 +148,13 @@ public class DBConnector implements Callable<Void>{
 				conn.commit();
 				conn.close();
 			}
-			state.addProperty("afected_rows", rowsAffected);
+			JsonObject total_mods = new JsonObject();
+			//total_mods.add("total_modifications", total_mods);
+			
+			state.add("result", new JsonObject());
+			state.get("result").getAsJsonObject().add("total_modifications", total_mods);
+			
+			//state.addProperty("afected_rows", rowsAffected);
 			state.addProperty("resolution", "commited");
 		} else {
 			if (st != null) {

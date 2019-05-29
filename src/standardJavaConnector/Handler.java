@@ -50,9 +50,7 @@ public class Handler {
 		
 		
 		for (Entry<String, JsonElement> obj : elem.entrySet()) {
-//			System.out.println(obj.getKey());
 			JsonObject dbconn = obj.getValue().getAsJsonObject();
-//			System.out.println(dbconn.get("host"));
 			
 			String host = dbconn.has("host") ? dbconn.get("host").getAsString() : "";	
 			String port = dbconn.has("port") ? dbconn.get("port").getAsString() : "";
