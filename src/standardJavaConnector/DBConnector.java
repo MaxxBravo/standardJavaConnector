@@ -8,6 +8,8 @@ import java.sql.Statement;
 import java.util.Date;
 import java.util.concurrent.Callable;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 class WrongDatabaseException extends Exception {
@@ -27,13 +29,14 @@ public class DBConnector implements Callable<Void>{
 	private static boolean allGood = true;
 	private static boolean debugModeCon = false;
 	
-	public String conector, query;
+	public String conector;
+	public JsonArray query;
 	public String idConnector, user, pwd, host, port, serverName, dbName;
 	public int rowsAffected;
 	
 	//Constructor General
 	public DBConnector(String idConnector, String host, String port, String serverName, String dbName, String user, String pwd,
-			String conector, String query) {
+			String conector, JsonArray query) {
 		this.idConnector = idConnector;
 		this.host = host;
 		this.port = port;
@@ -89,29 +92,36 @@ public class DBConnector implements Callable<Void>{
 				throw new WrongDatabaseException();
 			}
 			
-			String sql = this.query;
+			// String[] sql = this.query;
 			conn.setAutoCommit(false);
 			st = conn.createStatement();
+			JsonArray arr = this.query;
+			for(JsonElement i : arr) {
+				
+				st.addBatch(i.getAsString());
+			}
 			
-			rowsAffected = st.executeUpdate(sql);
+			//st.addBatch(sql);
+			// st.executeUpdate(sql);
+			
+			//rowsAffected = st.executeUpdate(sql);
+			int [] arr_int = st.executeBatch();
+			
+			for (int i : arr_int) {
+				rowsAffected += i;
+			}
+			
 			state.addProperty("idConnector", this.idConnector);
 			state.addProperty("execution", "ok");
+			state.addProperty("conector", this.conector);
 
 		} catch (Exception e) {
 			allGood = false;
 			state.addProperty("idConnector", this.idConnector);
+			state.addProperty("conector", this.conector);
 			state.addProperty("execution", "error");
 			state.addProperty("error_message", e.getLocalizedMessage());
 		}
-	}
-	
-	public JsonObject makeRequest2() {
-		JsonObject obj = new JsonObject();
-		obj.addProperty("idConnector", this.idConnector);
-		obj.addProperty("execution", this.host);
-		obj.addProperty("error_message", this.port);
-		return obj;
-		
 	}
 	
 	public JsonObject closeConnections() throws SQLException {
