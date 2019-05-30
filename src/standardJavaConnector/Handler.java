@@ -25,7 +25,7 @@ public class Handler {
 
 	public static List<DBConnector> otherConectores = new ArrayList<>();
 	public static List<DBConnector> mssqlconectores = new ArrayList<>();
-	public static DBConnector logConnector;
+	public static LogConnector logConnector;
 	static JsonObject responseObject = new JsonObject(); 
 	static JsonObject logAudParams = new JsonObject();
 	static boolean debugMode = false;
@@ -38,7 +38,7 @@ public class Handler {
 		JsonObject elem = down_elem.get("changes").getAsJsonObject();
 		logAudParams = down_elem.get("auditory").getAsJsonObject();
 			
-		logConnector = new DBConnector("Auditoria", 
+		logConnector = new LogConnector("Auditoria", 
 				logAudParams.has("host") ? logAudParams.get("host").getAsString() : "", 
 				logAudParams.has("port") ? logAudParams.get("port").getAsString() : "", 
 				logAudParams.has("serverName") ? logAudParams.get("serverName").getAsString() : "", 
@@ -126,7 +126,7 @@ public class Handler {
 			
 			if(DBConnector.isAllGood()) {
 				//Log Auditory
-				
+				logConnector.setResponseObject(responseObject);
 				logConnector.makeRequest();
 				JsonObject state = logConnector.closeConnections();
 				String idConnector = state.remove("idConnector").getAsString();
