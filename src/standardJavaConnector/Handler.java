@@ -126,7 +126,7 @@ public class Handler {
 			
 			if(DBConnector.isAllGood()) {
 				//Log Auditory
-				logConnector.setResponseObject(responseObject);
+				logConnector.setLogEjecuciones(DBConnector.getLogEjecuciones());
 				logConnector.makeRequest();
 				JsonObject state = logConnector.closeConnections();
 				String idConnector = state.remove("idConnector").getAsString();

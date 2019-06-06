@@ -6,6 +6,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 import com.google.gson.JsonArray;
@@ -17,7 +20,7 @@ import ExceptionsCustom.WrongDatabaseException;
 public class LogConnector implements Callable<Void>{
 	JsonObject state = new JsonObject();
 	JsonArray result_description = new JsonArray();
-	JsonObject responseObject = new JsonObject();	
+	Map<String, List<String>> logEjecuciones = new HashMap<>();	
 	
 	Connection conn = null;
 	Statement st = null;
@@ -46,11 +49,9 @@ public class LogConnector implements Callable<Void>{
 	}
 
 
-	public void setResponseObject(JsonObject responseObject) {
-		this.responseObject = responseObject;
+	public void setLogEjecuciones(Map<String, List<String>> logEjecuciones) {
+		this.logEjecuciones = logEjecuciones;
 	}
-
-
 
 	public static boolean isAllGood() {
 		return allGood;
@@ -98,10 +99,35 @@ public class LogConnector implements Callable<Void>{
 			JsonArray queries = this.query;
 			
 			for(JsonElement elem : queries) {
-				JsonObject query_object = elem.getAsJsonObject();
-				JsonArray result_upd = responseObject.get(query_object.get("idBase").getAsString()).getAsJsonObject().get("afected_rows").getAsJsonArray();
+				JsonObject queryObject = elem.getAsJsonObject();
+
+				if(queryObject.get("type").getAsString().equalsIgnoreCase("UPDATE")){
 					
-				st.addBatch(query_object.get("script").getAsString());
+					//Armar query desde los datos dispersados del JSON request desde el servidor
+					JsonObject script = queryObject.getAsJsonObject("script");
+					String queryToExecute = script.get("cabecera").getAsString() + " " + script.get("data").getAsString();
+					
+					if(logEjecuciones.get(queryObject.get("_idBase").getAsString()).contains(queryObject.get("_idScriptToLog").getAsString())) {
+						String applied = " 'Y' ";
+						queryToExecute += applied;
+						
+					} else {
+						String notApplied = " 'N' ";
+						queryToExecute += notApplied;
+						
+					}
+					queryToExecute += script.get("end").getAsString();
+					
+					st.addBatch(queryToExecute);
+					
+				} else if(queryObject.get("type").getAsString().equalsIgnoreCase("INSERT")) {
+					if(logEjecuciones.get(queryObject.get("_idBase").getAsString()).contains(queryObject.get("_idScriptToLog").getAsString())) {
+						st.addBatch(queryObject.get("script").getAsString());	
+					}
+					
+				} else if(queryObject.get("type").getAsString().equalsIgnoreCase("JUMPSTEP")) {
+					st.addBatch(queryObject.get("script").getAsString());
+				}
 			}
 
 			int [] arr_int = st.executeBatch();

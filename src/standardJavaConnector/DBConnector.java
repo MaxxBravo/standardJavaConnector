@@ -5,7 +5,11 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 import com.google.gson.JsonArray;
@@ -23,6 +27,9 @@ public class DBConnector implements Callable<Void>{
 	
 	private static boolean allGood = true;
 	private static boolean debugModeCon = false;
+	private static Map<String, List<String>> logEjecuciones = new HashMap<>();
+	
+	private List <String> listQueriesToRun = new ArrayList<>();
 	
 	public String conector;
 	public JsonArray query;
@@ -32,6 +39,7 @@ public class DBConnector implements Callable<Void>{
 	//Constructor General
 	public DBConnector(String idConnector, String host, String port, String serverName, String dbName, String user, String pwd,
 			String conector, JsonArray query) {
+		
 		this.idConnector = idConnector;
 		this.host = host;
 		this.port = port;
@@ -53,7 +61,11 @@ public class DBConnector implements Callable<Void>{
 	public static void setDebugModeCon(boolean debugModeCon) {
 		DBConnector.debugModeCon = debugModeCon;
 	}
-
+	
+	public static Map<String, List<String>> getLogEjecuciones() {
+		return logEjecuciones;
+	}
+	
 	public void makeRequest() throws IOException, SQLException{
 			
 		try {
@@ -90,19 +102,38 @@ public class DBConnector implements Callable<Void>{
 			conn.setAutoCommit(false);
 			st = conn.createStatement();
 			JsonArray queries = this.query;
-
+			
 			for(JsonElement elem : queries) {
 				JsonObject query_object = elem.getAsJsonObject();
+				listQueriesToRun.add(query_object.get("_idScript").getAsString());
+				
+				
 				st.addBatch(query_object.get("script").getAsString());
 			}
-	
+			
 			int [] arr_int = st.executeBatch();
 
-			for (int i : arr_int) {
+//			for (int i : arr_int) {
+//				listQueriesToRun.set(index, element)
+//				JsonObject _to_add = new JsonObject();
+//				_to_add.addProperty(String.valueOf(i), i);
+//				result_description.add(_to_add.remove(String.valueOf(i)));
+//			}
+			
+			for(int index = 0; index<arr_int.length; index++) {
+				if(arr_int[index] == 0) {
+					listQueriesToRun.set(index, "none");
+				}
+				
 				JsonObject _to_add = new JsonObject();
-				_to_add.addProperty(String.valueOf(i), i);
-				result_description.add(_to_add.remove(String.valueOf(i)));
+				_to_add.addProperty(String.valueOf(arr_int[index]), arr_int[index]);
+				result_description.add(_to_add.remove(String.valueOf(arr_int[index])));
 			}
+			
+			while(listQueriesToRun.remove("none")){}
+			
+			logEjecuciones.put(this.idConnector, listQueriesToRun);
+				
 			
 			state.addProperty("idConnector", this.idConnector);
 			state.addProperty("execution", "ok");
@@ -151,4 +182,7 @@ public class DBConnector implements Callable<Void>{
 		this.makeRequest();
 		return null;
 	}
+
+
+	
 }
